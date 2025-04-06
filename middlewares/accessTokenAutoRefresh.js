@@ -17,22 +17,21 @@ const accessTokenAutoRefresh = async (req, res, next) => {
         throw new Error("Refresh token is missing");
       }
 
-      const {
-        newAccessToken,
-        newRefreshToken,
-        newAccessTokenExp,
-        newRefreshTokenExp,
-      } = await refreshAccessToken(req, res);
+      const result = await refreshAccessToken(req, res);
+
+      if (!result?.newAccessToken) {
+        return res.status(401).json({ message: "Token refresh failed" });
+      }
 
       setTokenCookies(
         res,
-        newAccessToken,
-        newRefreshToken,
-        newAccessTokenExp,
-        newRefreshTokenExp
+        result.newAccessToken,
+        result.newRefreshToken,
+        result.newAccessTokenExp,
+        result.newRefreshTokenExp
       );
 
-      req.headers["authorization"] = `Bearer ${accessToken}`;
+      req.headers["authorization"] = `Bearer ${result.newAccessToken}`;
     }
     next();
   } catch (error) {
