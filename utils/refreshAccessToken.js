@@ -1,4 +1,4 @@
-import { verifyEmail } from "../controllers/userController.js";
+import jwt from "jsonwebtoken";
 import UserModel from "../models/User.js";
 import UserRefreshTokenModel from "../models/UserRefreshToken.js";
 import generateTokens from "./generateTokens.js";
@@ -7,14 +7,10 @@ const refreshAccessToken = async (req, res) => {
   try {
     const oldRefreshToken = req.cookies.refreshToken;
 
-    const { tokenDetails, error } = await verifyEmail(oldRefreshToken);
-
-    if (error) {
-      return res.status(401).send({
-        statu: "failed",
-        message: "Invalid refresh token",
-      });
-    }
+    const tokenDetails = jwt.verify(
+      oldRefreshToken,
+      process.env.JWT_REFRESH_TOKEN_SECRET_KEY
+    );
 
     const user = await UserModel.findById(tokenDetails._id);
 
