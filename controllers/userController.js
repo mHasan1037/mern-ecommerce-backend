@@ -206,7 +206,26 @@ export const userLogin = async (req, res) => {
 };
 
 export const userProfile = async (req, res) => {
-  res.send({ user: req.user });
+   try {
+    const user = await UserModel.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+     res.status(200).json({
+       user: {
+         id: user._id,
+         email: user.email,
+         name: user.name,
+         roles: user.is_admin,
+       },
+       is_auth: true,
+     });
+   } catch (error) {
+     console.error("Error in /me:", error);
+     res.status(500).json({ message: "Server error" });
+   }
 };
 
 export const userLogout = async (req, res) => {

@@ -27,6 +27,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 connectDB(DATABASE_URL);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use('/api/user', userRoutes);
