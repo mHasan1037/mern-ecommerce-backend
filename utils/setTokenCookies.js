@@ -11,19 +11,22 @@ const setTokenCookies = (
     res.cookie('accessToken', accessToken, {
         httpOnly: true,
         secure: true,
-        maxAge: accessTokenMaxAge
+        maxAge: accessTokenMaxAge,
+        sameSite: 'lax',
     })
 
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
-        maxAge: refreshTokenMaxAge
+        maxAge: refreshTokenMaxAge,
+        sameSite: 'lax'
     })
 
-    res.cookie('is_auth', true, {
+    res.cookie('accessToken_public', accessToken, {
         httpOnly: false,
-        secure: false,
-        maxAge: refreshTokenMaxAge
+        secure: true,
+        maxAge: accessTokenMaxAge,
+        sameSite: "lax",
     })
 }
 
