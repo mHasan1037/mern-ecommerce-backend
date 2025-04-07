@@ -14,12 +14,14 @@ const accessTokenAutoRefresh = async (req, res, next) => {
       const refreshToken = req.cookies.refreshToken;
 
       if (!refreshToken) {
-        throw new Error("Refresh token is missing");
+        console.warn("⛔ Refresh token is missing");
+        return res.status(401).json({ message: "Refresh token is missing" });
       }
 
       const result = await refreshAccessToken(req, res);
 
       if (!result?.newAccessToken) {
+        console.warn("⛔ Failed to refresh access token");
         return res.status(401).json({ message: "Token refresh failed" });
       }
 
@@ -37,10 +39,12 @@ const accessTokenAutoRefresh = async (req, res, next) => {
   } catch (error) {
     console.error("Error adding access token to header:", error.message);
 
-    res.status(401).json({
-      error: "Unauthorized",
-      message: "Access token is missing or invalid",
-    });
+    if (!res.headersSent) {
+      res.status(401).json({
+        error: "Unauthorized",
+        message: "Access token is missing or invalid",
+      });
+    }
   }
 };
 

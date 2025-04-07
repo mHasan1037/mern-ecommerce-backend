@@ -218,7 +218,8 @@ export const userProfile = async (req, res) => {
          id: user._id,
          email: user.email,
          name: user.name,
-         roles: user.is_admin,
+         isVerified: user.is_verified,
+         isAdmin: user.is_admin,
        },
        is_auth: true,
      });
@@ -237,7 +238,7 @@ export const userLogout = async (req, res) => {
     );
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
-    res.clearCookie("is_auth");
+    res.clearCookie("accessToken_public");
 
     res.status(200).json({
       status: "success",
