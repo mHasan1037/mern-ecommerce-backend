@@ -203,3 +203,39 @@ export const updateOrderStatus = async (req, res) =>{
         })
     }
 }
+
+export const getAllUserOrders = async (req, res) =>{
+   try{
+      if(req.user.roles !== true){
+        return res.status(403).json({
+            message: "Access denied. Admins only"
+        })
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const totalOrders = await OrderModel.countDocuments();
+
+      const orders = await OrderModel.find({})
+        .populate("user", "name email")
+        .populate("orderItems.product", "name price images")
+        .sort({ placedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      res.status(200).json({
+        message: "All orders fetched successfully",
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        totalOrders,
+        orders
+      })
+   }catch(err){
+      res.status(500).json({
+        message: "Failed to fetch all orders",
+        error: err.message
+      })
+   }
+}
