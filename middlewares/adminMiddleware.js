@@ -4,6 +4,10 @@ const adminMiddleware = (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
 
+    if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
     if (!token) {
       return res.status(401).json({ status: "failed", message: "Unauthorized access" });
     }
@@ -13,7 +17,7 @@ const adminMiddleware = (req, res, next) => {
         return res.status(401).json({ status: "failed", message: "Invalid token" });
       }
 
-      if (!decoded.roles || decoded.roles !== true) {
+      if (decoded.roles !== true) {
         return res.status(403).json({ status: "failed", message: "Access forbidden" });
       }
 

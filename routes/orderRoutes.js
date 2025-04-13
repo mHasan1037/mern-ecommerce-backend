@@ -7,7 +7,8 @@ import {
   getAllOrders,
   cancelOrder,
   getOrderDetails,
-  updateOrderStatus
+  updateOrderStatus,
+  getAllUserOrders
 } from "../controllers/orderController.js";
 import adminMiddleware from '../middlewares/adminMiddleware.js';
 
@@ -26,6 +27,14 @@ router.get(
    passport.authenticate("jwt", {session: false }),
    getUserOrders
 );
+
+router.get(
+    "/admin/allUsersOrders",
+    accessTokenAutoRefresh,
+    passport.authenticate("jwt", {session: false }),
+    adminMiddleware,
+    getAllUserOrders
+)
 
 router.get(
    "/admin/orders",

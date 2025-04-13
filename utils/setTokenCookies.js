@@ -10,21 +10,21 @@ const setTokenCookies = (
 
     res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: accessTokenMaxAge,
         sameSite: 'lax',
     })
 
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: refreshTokenMaxAge,
         sameSite: 'lax'
     })
 
     res.cookie('accessToken_public', accessToken, {
         httpOnly: false,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: accessTokenMaxAge,
         sameSite: "lax",
     })
