@@ -27,7 +27,7 @@ const orderSchema = new mongoose.Schema({
     deliveredAt: { type: Date },
     cancelledAt: { type: Date },
     placedAt: { type: Date, default: Date.now }
-})
+}, {timestamps: true})
 
 const OrderModel = mongoose.model("order", orderSchema);
 
