@@ -1,10 +1,7 @@
+import { getMonthlyCount } from "../helpers/getMonthlyCount.js";
 import OrderModel from "../models/Order.js";
 import ProductModel from "../models/Product.js";
 import UserModel from "../models/User.js";
-
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const currentMonthIndex = new Date().getMonth(); 
-const currentMonth = new Date().getMonth();
 
 const startOfMonth = (offset = 0) => {
   const date = new Date();
@@ -52,7 +49,7 @@ export const adminDashboard = async (req, res) => {
       createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth}
     })
 
-    const usersGrowth = usersLastMonth === 0 ? 100 : ((usersThisMonth - usersLastMonth) / usersLastMonth ) * 100
+    const usersGrowthThisMonth = usersLastMonth === 0 ? 100 : ((usersThisMonth - usersLastMonth) / usersLastMonth ) * 100
 
     
     const ordersThisMonth = await OrderModel.countDocuments({
@@ -63,7 +60,7 @@ export const adminDashboard = async (req, res) => {
       placedAt: { $gte: startOfLastMonth, $lt: startOfThisMonth }
     })
 
-    const ordersGrowth = ordersLastMonth === 0 ? 100 : ((ordersThisMonth - ordersLastMonth ) / ordersLastMonth ) * 100;
+    const ordersGrowthThisMonth = ordersLastMonth === 0 ? 100 : ((ordersThisMonth - ordersLastMonth ) / ordersLastMonth ) * 100;
 
     const revenueThisMonthData = await OrderModel.aggregate([
       { $match: { placedAt: { $gte: startOfThisMonth }, status: { $ne: "cancelled" } } },
@@ -77,7 +74,7 @@ export const adminDashboard = async (req, res) => {
     ]);
     const revenueLastMonth = revenueLastMonthData[0]?.total || 0;
 
-    const revenueGrowth = revenueLastMonth === 0 ? 100 : ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100;
+    const revenueGrowthThisMonth = revenueLastMonth === 0 ? 100 : ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100;
 
     const newProductsThisMonth = await ProductModel.countDocuments({
       createdAt: { $gte: startOfThisMonth }
@@ -101,10 +98,7 @@ export const adminDashboard = async (req, res) => {
       }
     ]);
 
-    const revenueGraph = monthlyRevenue.map(item => ({
-      month: months[item._id.month - 1],
-      total: item.total
-    }));
+    const revenueGraphSixMonth = getMonthlyCount(monthlyRevenue, "total")
 
     const monthlyOrders = await OrderModel.aggregate([
       {
@@ -123,19 +117,7 @@ export const adminDashboard = async (req, res) => {
       }
     ]);
 
-    const orderGrowth =Array.from ({ length: 6}).map((_, i)=>{
-      const date = new Date();
-      date.setMonth(currentMonth - 5 + i);
-      const label = `${months[date.getMonth()]}`;
-      const found = monthlyOrders.find((entry)=>{
-         entry._id.year === date.getFullYear() && 
-         entry._id.month === date.getMonth() + 1
-      });
-      return {
-        month: label,
-        count: found?.count || 0
-      }
-    })
+    const ordersGraphSixMonth = getMonthlyCount(monthlyOrders, "count");
 
     
     const monthlyUsers = await UserModel.aggregate([
@@ -156,21 +138,8 @@ export const adminDashboard = async (req, res) => {
       }
     ]);
 
-    const userGrowth = Array.from({ length: 6 }).map((_, i) =>{
-       const date = new Date();
-       date.setMonth(currentMonth - 5 + i);
-       const label = months[date.getMonth()];
-       const found = monthlyUsers.find((entry) =>{
-        entry._id.year === date.getFullYear() &&
-        entry._id.month === date.getMonth() + 1
-       });
-       return {
-        month: label,
-        count: found?.count || 0
-       }
-    })
+    const userGraphSixMonth = getMonthlyCount(monthlyUsers, "count");
     
-    console.log('userGrowth', userGrowth)
 
     res.status(200).json({
       message: "Admin summary fetched",
@@ -181,13 +150,13 @@ export const adminDashboard = async (req, res) => {
         totalRevenue,
         orderStatusCount,
         lowStockProducts,
-        usersGrowth,
-        ordersGrowth,
-        revenueGrowth,
+        usersGrowthThisMonth,
+        ordersGrowthThisMonth,
+        revenueGrowthThisMonth,
         newProductsThisMonth,
-        revenueGraph,
-        orderGrowth,
-        userGrowth
+        revenueGraphSixMonth,
+        ordersGraphSixMonth,
+        userGraphSixMonth
       },
     });
   } catch (error) {
