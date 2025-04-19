@@ -106,9 +106,8 @@ export const uploadProduct = async (req, res) =>{
     })
 
     } catch (error) {
-      return res
-        .status(500)
-        .json({ message: "Server error", error: error.message });
+        console.error("Upload product error:", error);
+        return res.status(500).json({ message: "Server error", error: error.message });        
     }
 }
 
@@ -337,5 +336,34 @@ export const createProductReview = async (req, res) =>{
         message: "Server error",
         error: err.message
        })
+    }
+};
+
+export const deleteProductImage = async (req, res) => {
+    try{
+        const publicId = req.params.publicId;
+
+        if(!publicId){
+            return res.status(400).json({
+                message: "Missing public_id"
+            })
+        };
+
+        const result = await cloudinary.uploader.destroy(publicId);
+
+        if(result.result !== "ok"){
+            return res.status(500).json({
+                message: "Failed to delete image"
+            })
+        }
+
+        return res.status(200).json({
+            message: "Image deleted successfully"
+        });
+    }catch(error){
+        return res.status(500).json({
+            message: "Server error",
+            error: error.message
+        })
     }
 }

@@ -7,7 +7,8 @@ import {
   updateProduct,
   getOneProduct,
   deleteProduct,
-  createProductReview
+  createProductReview,
+  deleteProductImage
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -82,7 +83,16 @@ router.post(
     session: false
   }),
   createProductReview
-)
+);
+
+router.delete(
+  "/products/delete-image/:publicId",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", {
+    session: false
+  }),
+  deleteProductImage
+);
 
 
 
