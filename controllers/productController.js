@@ -1,10 +1,16 @@
+import mongoose from "mongoose";
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
 import cloudinary from "../utils/cloudinary.js";
 
 export const createCategory = async (req, res) =>{
     try{
-        const {name, description, parentCategory} = req.body;
+        const {name, description, parentCategory, image} = req.body;
+
+        if (!image || !image.url || !image.public_id) {
+            return res.status(400).json({ message: "Image is required" });
+        }
+
         const existingCategory = await CategoryModel.findOne({name});
         if(existingCategory){
             return res.status(400).json({
@@ -13,13 +19,19 @@ export const createCategory = async (req, res) =>{
         }
 
         if (parentCategory) {
+            if(!mongoose.Types.ObjectId.isValid(parentCategory)){
+                return res.status(400).json({
+                    message: "Invalide parent category"
+                })
+            };
+
             const parentExists = await CategoryModel.findById(parentCategory);
             if (!parentExists) {
                 return res.status(404).json({ message: "Parent category not found" });
             }
         }
 
-        const newCategory = new CategoryModel({name, description, parentCategory});
+        const newCategory = new CategoryModel({name, description, parentCategory: parentCategory || null, image});
         await newCategory.save();
 
         res.status(201).json({
