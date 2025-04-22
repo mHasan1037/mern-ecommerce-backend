@@ -42,6 +42,4 @@ app.use('/api', chatbotRoutes);
 app.listen(port, ()=>{
     console.log(`Server is listing at http://localhost:${port}`)
 })
-
-//mhasanbd
-//dbpass:- 0gFDqMOi63IHFIqn
+ 
