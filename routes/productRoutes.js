@@ -28,11 +28,6 @@ router.post(
 
 router.get(
   "/categories",
-  accessTokenAutoRefresh,
-  passport.authenticate("jwt", {
-    session: false,
-  }),
-  adminMiddleware,
   getAllCategories
 );
 
