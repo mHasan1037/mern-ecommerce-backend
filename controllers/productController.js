@@ -132,7 +132,8 @@ export const getAllProducts = async (req, res) =>{
            maxPrice,
            sort="newest",
            page = 1,
-           limit = 20
+           limit = 20,
+           is_featured
         } = req.query;
 
         const query = {};
@@ -159,6 +160,10 @@ export const getAllProducts = async (req, res) =>{
             query.price = {};
             if(minPrice) query.price.$gte = Number(minPrice);
             if(maxPrice) query.price.$lte = Number(maxPrice);
+        }
+
+        if(is_featured !== undefined){
+            query.is_featured = is_featured === "true";
         }
 
         const skip = (Number(page) - 1) * Number(limit);
