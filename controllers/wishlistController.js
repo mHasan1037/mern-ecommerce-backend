@@ -10,9 +10,12 @@ export const addToWishlist = async (req, res) =>{
         await user.save();
        }
 
+       const updatedUser = await UserModel.findById(req.user._id)
+       .populate('wishlist', 'name price images')
+
        res.status(200).json({
         message: "Added to wishlist",
-        wishlist: user.wishlist
+        wishlist: updatedUser.wishlist
        })
     }catch(err){
        res.status(500).json({
