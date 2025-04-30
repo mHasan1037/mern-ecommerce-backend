@@ -28,7 +28,7 @@ export const addToWishlist = async (req, res) =>{
 export const getWishlist = async (req, res) =>{
     try{
        const user = await UserModel.findById(req.user._id)
-           .populate("wishlist", "name price images")
+           .populate("wishlist", "name price images stock")
        
        res.status(200).json({
         message: "Wishlist fetched successfully",
@@ -63,4 +63,28 @@ export const removeFromWishlist = async (req, res) =>{
         error: err.message
        })
     }
+}
+
+export const clearWishlist = async (req, res) =>{
+   try{
+      if(!req.user || !req.user._id){
+         return res.status(401).json({
+            success: false,
+            message: "Unauthorized access"
+         })
+      }
+
+      const updatedUser = await UserModel.findByIdAndUpdate(req.user._id, { wishlist: [] }, { new: true });
+
+      res.status(200).json({
+         success: true,
+         message: "Wishlist cleared successfully",
+         wishList: updatedUser.wishlist
+      })
+   }catch(error){
+      res.status(500).json({
+         success: false,
+         message: error.message
+      })
+   }
 }
