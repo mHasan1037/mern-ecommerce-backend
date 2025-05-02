@@ -8,7 +8,8 @@ import {
   cancelOrder,
   getOrderDetails,
   updateOrderStatus,
-  getAllUserOrders
+  getAllUserOrders,
+  placeDirectOrder
 } from "../controllers/orderController.js";
 import adminMiddleware from '../middlewares/adminMiddleware.js';
 
@@ -20,6 +21,13 @@ router.post(
     passport.authenticate('jwt', { session: false }),
     placeOrder
 );
+
+router.post(
+    "/orders/direct",
+    accessTokenAutoRefresh,
+    passport.authenticate('jwt', { session: false }),
+    placeDirectOrder
+)
 
 router.get(
    "/orders",

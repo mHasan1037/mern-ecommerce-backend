@@ -1,5 +1,5 @@
-import { populate } from "dotenv";
 import OrderModel from "../models/Order.js";
+import ProductModel from "../models/Product.js";
 import UserModel from "../models/User.js";
 import sendOrderStatusEmail from "../utils/orderStatusEmail.js";
 
@@ -46,6 +46,53 @@ export const placeOrder = async (req, res) =>{
             message: "Failed to plaec order",
             error: err.message
         })
+    }
+}
+
+export const placeDirectOrder = async (req, res) =>{
+    try{
+       const userId = req.user._id;
+       const {
+        productId,
+        quantity,
+        shippingInfo,
+        totalAmount
+       } = req.body;
+
+       if(!productId || !quantity || !shippingInfo || !totalAmount){
+         return res.status(400).json({
+            message: "Misssing required fields for direct order"
+         })
+       }
+
+    const product = await ProductModel.findById(productId);
+
+    if(!product){
+        return res.status(404).json({
+            message: "Product not found"
+        })
+    }
+
+    const newOrder = new OrderModel({
+       user: userId,
+       orderItems: [{product: product._id, quantity}],
+       shippingInfo,
+       totalAmount,
+       paymentMethod: "Cash on Delivery"
+    });
+
+    await newOrder.save();
+
+    return res.status(201).json({
+        message: "Order placed successfully",
+        order: newOrder
+    })
+
+    }catch(error){
+       return res.status(500).json({
+        message: "Failed to place direct order",
+        error: error.message
+       })
     }
 }
 
