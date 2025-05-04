@@ -312,6 +312,11 @@ export const createProductReview = async (req, res) =>{
        const userId = req.user._id;
        const userName = req.user.name;
 
+       if(!rating && !comment){
+         return res.status(400).json({
+            message: "Please provide a rating or a commnet"
+         })
+       }
        const product = await ProductModel.findById(productId);
 
        if(!product){
@@ -333,14 +338,22 @@ export const createProductReview = async (req, res) =>{
        const newReview = {
         user: userId,
         name: userName,
-        rating: Number(rating),
-        comment,
        };
+
+       if (rating) newReview.rating = Number(rating);
+       if (comment) newReview.comment = comment;
 
        product.reviews.push(newReview);
        product.ratings.totalReviews = product.reviews.length;
+
+       const reviewsWithRating = product.reviews.filter(
+        (r) => typeof r.rating === "number" && !isNaN(r.rating)
+       );
+
        product.ratings.average = 
-         product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.ratings.totalReviews;
+        reviewsWithRating.length > 0
+        ? reviewsWithRating.reduce((acc, r) => acc + r.rating, 0) / reviewsWithRating.length
+        : 0;
 
        await product.save();
 
