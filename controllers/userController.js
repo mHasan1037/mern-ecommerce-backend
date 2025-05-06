@@ -8,6 +8,7 @@ import refreshAccessToken from "../utils/refreshAccessToken.js";
 import UserRefreshTokenModel from "../models/UserRefreshToken.js";
 import transporter from "../config/emailConfig.js";
 import jwt from "jsonwebtoken";
+import OrderModel from "../models/Order.js";
 
 export const userRegistration = async (req, res) => {
   try {
@@ -214,6 +215,19 @@ export const userProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const totalDelivedOrder = await OrderModel.countDocuments({user: req.user._id, status: "delivered"});
+    const deliveredOrders = await OrderModel.find({ user: req.user._id, status: "delivered"});
+    const totalSpent = deliveredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalCancelledOrders = await OrderModel.countDocuments({user: req.user._id, status: "cancelled"});
+
+    const recentOrder = await OrderModel.findOne({user: req.user._id})
+    .sort({ placedAt: -1 })
+    .populate({
+      path: "orderItems.product",
+      select: "_id name",
+    })
+    .select("status placedAt orderItems");
+
      res.status(200).json({
        user: {
          id: user._id,
@@ -221,6 +235,17 @@ export const userProfile = async (req, res) => {
          name: user.name,
          isVerified: user.is_verified,
          isAdmin: user.is_admin,
+         totalSpent: totalSpent.toFixed(2),
+         totalDelivedOrder: totalDelivedOrder,
+         totalCancelledOrders: totalCancelledOrders,
+         recentOrder: recentOrder
+          ? {
+              id: recentOrder._id,
+              status: recentOrder.status,
+              placedAt: recentOrder.placedAt,
+              orderItems: recentOrder.orderItems[0].product
+            }
+          : null
        },
        is_auth: true,
      });
