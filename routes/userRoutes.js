@@ -4,6 +4,7 @@ import {
   verifyEmail,
   userLogin,
   userProfile,
+  getUserProfileById,
   userLogout,
   changeUserPassword,
   sendUserPasswordResetEmail,
@@ -24,11 +25,17 @@ router.post("/reset-password/:id/:token", userPasswordReset);
 router.get(
   "/me",
   accessTokenAutoRefresh,
-  passport.authenticate("jwt", {
-    session: false,
-  }),
+  passport.authenticate("jwt", {session: false,}),
   userProfile
 );
+
+router.get(
+  "/:id/profile",
+  accessTokenAutoRefresh, 
+  passport.authenticate("jwt", { session: false }),
+  adminMiddleware, 
+  getUserProfileById
+)
 
 router.get(
   "/admin-dashboard",

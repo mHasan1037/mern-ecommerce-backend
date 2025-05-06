@@ -4,11 +4,10 @@ import sendEmailVerificationOTP from "../utils/sendEmailVerificationOTP.js";
 import EmailVerificationModel from "../models/EmailVerification.js";
 import generateTokens from "../utils/generateTokens.js";
 import setTokenCookies from "../utils/setTokenCookies.js";
-import refreshAccessToken from "../utils/refreshAccessToken.js";
 import UserRefreshTokenModel from "../models/UserRefreshToken.js";
 import transporter from "../config/emailConfig.js";
 import jwt from "jsonwebtoken";
-import OrderModel from "../models/Order.js";
+import { getFullUserProfile } from "../utils/getUserProfile.js";
 
 export const userRegistration = async (req, res) => {
   try {
@@ -209,51 +208,21 @@ export const userLogin = async (req, res) => {
 
 export const userProfile = async (req, res) => {
    try {
-    const user = await UserModel.findById(req.user._id).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const totalDelivedOrder = await OrderModel.countDocuments({user: req.user._id, status: "delivered"});
-    const deliveredOrders = await OrderModel.find({ user: req.user._id, status: "delivered"});
-    const totalSpent = deliveredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-    const totalCancelledOrders = await OrderModel.countDocuments({user: req.user._id, status: "cancelled"});
-
-    const recentOrder = await OrderModel.findOne({user: req.user._id})
-    .sort({ placedAt: -1 })
-    .populate({
-      path: "orderItems.product",
-      select: "_id name",
-    })
-    .select("status placedAt orderItems");
-
-     res.status(200).json({
-       user: {
-         id: user._id,
-         email: user.email,
-         name: user.name,
-         isVerified: user.is_verified,
-         isAdmin: user.is_admin,
-         totalSpent: totalSpent.toFixed(2),
-         totalDelivedOrder: totalDelivedOrder,
-         totalCancelledOrders: totalCancelledOrders,
-         recentOrder: recentOrder
-          ? {
-              id: recentOrder._id,
-              status: recentOrder.status,
-              placedAt: recentOrder.placedAt,
-              orderItems: recentOrder.orderItems[0].product
-            }
-          : null
-       },
-       is_auth: true,
-     });
+    const profile = await getFullUserProfile(req.user._id);
+    res.status(200).json({user: profile, is_auth: true})
    } catch (error) {
-     console.error("Error in /me:", error);
      res.status(500).json({ message: "Server error" });
    }
 };
+
+export const getUserProfileById = async (req, res) =>{
+  try {
+    const profile = await getFullUserProfile(req.params.id);
+    res.status(200).json({ user: profile });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
 
 export const userLogout = async (req, res) => {
   try {
