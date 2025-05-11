@@ -39,7 +39,7 @@ app.use('/api', adminRoutes);
 app.use('/api', chatbotRoutes);
 
 
-app.listen(port, ()=>{
-    console.log(`Server is listing at http://localhost:${port}`)
+app.listen(port, '0.0.0.0', ()=>{
+    console.log(`Server is listing at http://0.0.0.0:${port}`)
 })
  
