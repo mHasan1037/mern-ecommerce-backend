@@ -18,10 +18,12 @@ export const placeOrder = async (req, res) =>{
             })
         };
 
-        const orderItems = user.cart.map(item =>({
+        const orderItems = user.cart
+          .filter((item) => item.product)
+          .map((item) => ({
             product: item.product._id,
-            quantity: item.quantity
-        }));
+            quantity: item.quantity,
+          }));
 
         const newOrder = new OrderModel({
             user: userId,
