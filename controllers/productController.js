@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
 import cloudinary from "../utils/cloudinary.js";
+import OrderModel from "../models/Order.js";
 
 export const createCategory = async (req, res) =>{
     try{
@@ -397,3 +398,52 @@ export const deleteProductImage = async (req, res) => {
         })
     }
 }
+
+export const getMostSoldProducts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    const bestSellers = await OrderModel.aggregate([
+      { $match: { status: "delivered" } },
+      { $unwind: "$orderItems" },
+      {
+        $group: {
+          _id: "$orderItems.product",
+          totalSold: { $sum: "$orderItems.quantity" },
+        },
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "products", // must match your MongoDB collection name
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $project: {
+          _id: 0,
+          totalSold: 1,
+          product: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      count: bestSellers.length,
+      products: bestSellers.map((item) => ({
+        ...item.product,
+        totalSold: item.totalSold,
+      })),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Failed to fetch most sold products",
+      error: err.message,
+    });
+  }
+};
+
