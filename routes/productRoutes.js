@@ -8,7 +8,8 @@ import {
   getOneProduct,
   deleteProduct,
   createProductReview,
-  deleteProductImage
+  deleteProductImage,
+  getMostSoldProducts
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -44,6 +45,11 @@ router.post(
 router.get(
   "/products",
   getAllProducts
+);
+
+router.get(
+  "/products/most-sold", 
+  getMostSoldProducts
 );
 
 router.put(
