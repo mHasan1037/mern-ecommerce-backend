@@ -10,6 +10,12 @@ const categorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",
       default: null,
+      validate: {
+      validator: function (v) {
+        return v === null || mongoose.Types.ObjectId.isValid(v);
+      },
+      message: props => `${props.value} is not a valid category ID`,
+  }
     },
     image: {
       url: { type: String, required: true },
