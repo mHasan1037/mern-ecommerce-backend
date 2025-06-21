@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
 import cloudinary from "../utils/cloudinary.js";
@@ -65,6 +65,61 @@ export const getAllCategories = async (req, res) =>{
        })
     }
 }
+
+export const getCategoryById = async (req, res) =>{
+    try{
+        const {id} = req.params;
+
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return res.status(400).json({ message: "Invalid category ID"})
+        };
+
+        const category = await CategoryModel.findById(id).populate("parentCategory", "name _id");
+
+        if(!category || category.isDeleted){
+            return res.status(404).json({ message: "Category not found"});
+        }
+        
+        res.status(200).json({ message: "Category found", category});
+    }catch (error){
+        res.status(500).json({ message: "Internal server error", error: error.message })
+    }
+}
+
+export const updateCategory = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid category ID" });
+  }
+
+  try {
+    const updateData = { ...req.body };
+
+    if (updateData.parentCategory === "") {
+        updateData.parentCategory = null;
+    }
+
+    const updatedCategory = await CategoryModel.findByIdAndUpdate(
+      id, updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Category updated", category: updatedCategory });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const uploadProduct = async (req, res) =>{
     try {
@@ -416,7 +471,7 @@ export const getMostSoldProducts = async (req, res) => {
       { $limit: limit },
       {
         $lookup: {
-          from: "products", // must match your MongoDB collection name
+          from: "products", 
           localField: "_id",
           foreignField: "_id",
           as: "product",

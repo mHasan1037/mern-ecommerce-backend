@@ -9,7 +9,9 @@ import {
   deleteProduct,
   createProductReview,
   deleteProductImage,
-  getMostSoldProducts
+  getMostSoldProducts,
+  getCategoryById,
+  updateCategory
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -31,6 +33,19 @@ router.get(
   "/categories",
   getAllCategories
 );
+
+router.get(
+  "/categories/:id",
+  getCategoryById
+);
+
+router.put(
+  "/categories/:id",
+  accessTokenAutoRefresh,
+  passport.authenticate('jwt', { session: false }),
+  adminMiddleware,
+  updateCategory
+)
 
 router.post(
   "/upload-product",
