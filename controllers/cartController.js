@@ -79,7 +79,7 @@ export const updateCartItem = async (req, res) =>{
        const user = await UserModel.findById(userId);
 
        const itemIndex = user.cart.findIndex(
-        item => item.product.toString() === productId
+        item => item._id.toString() === productId
        );
 
        if(itemIndex === -1){

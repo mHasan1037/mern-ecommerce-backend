@@ -222,7 +222,8 @@ export const updateOrderStatus = async (req, res) =>{
         };
 
         const order = await OrderModel.findById(orderId)
-          .populate("user", "email name");
+          .populate("user", "email name")
+          .populate("orderItems.product", "name price images");
 
         if(!order) return res.status(404).json({
             message: "Order not found"
