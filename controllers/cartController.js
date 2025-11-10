@@ -76,10 +76,12 @@ export const updateCartItem = async (req, res) =>{
         })
        }
 
-       const user = await UserModel.findById(userId);
+        const user = await UserModel.findById(userId).select('cart');
+        if(!user) return res.status(404).json({message: "User not found"});
+
 
        const itemIndex = user.cart.findIndex(
-        item => item._id.toString() === productId
+        (item) => item.product.toString() === productId
        );
 
        if(itemIndex === -1){
@@ -92,9 +94,13 @@ export const updateCartItem = async (req, res) =>{
 
        await user.save();
 
+      const updatedUser = await UserModel.findById(userId)
+        .populate("cart.product", "name price images")
+        .select("cart");
+
        return res.status(200).json({
         message: "Cart item quantity updated",
-        cart: user.cart
+        cart: updatedUser.cart
        })
     }catch(err){
        res.status(500).json({
