@@ -223,13 +223,23 @@ export const updateOrderStatus = async (req, res) =>{
 
         const order = await OrderModel.findById(orderId)
           .populate("user", "email name")
-          .populate("orderItems.product", "name price images");
+          .populate("orderItems.product", "name price images stock");
 
         if(!order) return res.status(404).json({
             message: "Order not found"
         });
 
-        if(status === "shipped") order.shippedAt = new Date();
+        if(order.status !== 'shipped' && status === "shipped"){
+          for(const item of order.orderItems){
+            const product = await ProductModel.findById(item.product._id);
+            if(!product) continue;
+
+            product.stock -= item.quantity;
+            if(product.stock < 0) product.stock = 0;
+            await product.save();
+          }
+          order.shippedAt = new Date();
+        }
         if(status === "delivered") order.deliveredAt = new Date();
         if(status === "cancelled") order.cancelledAt = new Date();
 
