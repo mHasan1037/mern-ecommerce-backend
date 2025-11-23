@@ -30,7 +30,7 @@ export const placeOrder = async (req, res) =>{
             orderItems,
             shippingInfo,
             totalAmount,
-            paymentMethod: "Cash on Delivery"
+            paymentMethod: "COD"
         });
 
         await newOrder.save();
@@ -80,7 +80,7 @@ export const placeDirectOrder = async (req, res) =>{
        orderItems: [{product: product._id, quantity}],
        shippingInfo,
        totalAmount,
-       paymentMethod: "Cash on Delivery"
+       paymentMethod: "COD"
     });
 
     await newOrder.save();
