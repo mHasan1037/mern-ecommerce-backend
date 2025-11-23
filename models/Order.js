@@ -10,6 +10,7 @@ const orderSchema = new mongoose.Schema({
     ],
     shippingInfo: {
         fullName: { type: String, required: true },
+        email: { type: String, required: false },
         phone: { type: String, required: true },
         address: { type: String, required: true },
         city: { type: String, required: true },
@@ -17,7 +18,7 @@ const orderSchema = new mongoose.Schema({
         country: { type: String, required: true }
     },
     totalAmount : { type: Number, required: true },
-    paymentMethod: { type: String, default: "Cash on Delivery" },
+    paymentMethod: { type: String, enum: ["COD", "SSLCOMMERZ"], default: "COD" },
     status: {
         type: String,
         enum: ['processing', 'shipped', 'delivered', 'cancelled'],
