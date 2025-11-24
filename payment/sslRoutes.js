@@ -6,8 +6,8 @@ const router = express.Router();
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
 const is_live = process.env.SSLCOMMERZ_MODE === "true";
-const FRONTEND_URL = process.env.FRONTEND_HOST;
-const BACKEND_URL = process.env.BACKEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_PROD_URL;
+const BACKEND_URL = process.env.BACKEND_PROD_URL;
 
 router.post("/init", async (req, res) => {
   try {
