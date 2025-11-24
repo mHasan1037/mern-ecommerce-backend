@@ -10,6 +10,11 @@ const FRONTEND_URL = process.env.FRONTEND_PROD_URL;
 const BACKEND_URL = process.env.BACKEND_PROD_URL;
 
 router.post("/init", async (req, res) => {
+  console.log("====== SSL INIT PAYLOAD ======");
+  console.log(JSON.stringify(req.body, null, 2));
+
+  console.log("====== SUCCESS URL ======");
+  console.log(`${BACKEND_URL}/api/payment/ssl/success`);
   try {
     const {
       orderItems,
