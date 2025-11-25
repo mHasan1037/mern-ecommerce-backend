@@ -21,7 +21,9 @@ const DATABASE_URL = process.env.DATABASE_URL;
 
 const allowedOrigins = [
   "http://localhost:3000",
-  process.env.FRONTEND_PROD_URL
+  process.env.FRONTEND_PROD_URL,
+  "https://sandbox.sslcommerz.com",
+  "https://securepay.sslcommerz.com"
 ];
 
 const corsOptions = {
