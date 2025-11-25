@@ -71,6 +71,9 @@ router.post("/init", async (req, res) => {
     const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
     const apiResponse = await sslcz.init(data);
 
+    console.log("Running SSL Mode:", is_live);
+    console.log("Store ID:", store_id);
+
     if (apiResponse?.GatewayPageURL) {
       return res.json({ url: apiResponse.GatewayPageURL });
     } else {
