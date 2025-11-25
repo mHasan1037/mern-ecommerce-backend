@@ -19,10 +19,21 @@ const app = express();
 const port = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.FRONTEND_PROD_URL
+];
+
 const corsOptions = {
-  origin: process.env.FRONTEND_HOST,
+   origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ Blocked CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
-  optionSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));

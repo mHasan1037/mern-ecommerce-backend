@@ -6,8 +6,8 @@ const router = express.Router();
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
 const is_live = process.env.SSLCOMMERZ_MODE === "true";
-const FRONTEND_URL = process.env.FRONTEND_PROD_URL;
-const BACKEND_URL = process.env.BACKEND_PROD_URL;
+const FRONTEND_URL = process.env.FRONTEND_PROD_URL || "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_PROD_URL || "http://localhost:8000";
 
 router.post("/init", async (req, res) => {
   console.log("====== SSL INIT PAYLOAD ======");
