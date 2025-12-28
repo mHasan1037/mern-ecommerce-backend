@@ -24,16 +24,18 @@ const allowedOrigins = [
   process.env.FRONTEND_PROD_URL,
   "https://sandbox.sslcommerz.com",
   "https://securepay.sslcommerz.com"
-];
+].filter(Boolean);
 
 const corsOptions = {
-   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("❌ Blocked CORS:", origin);
-      callback(new Error("Not allowed by CORS"));
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+
+    console.log("❌ Blocked by CORS:", origin);
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
 };
