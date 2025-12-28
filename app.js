@@ -21,21 +21,23 @@ const DATABASE_URL = process.env.DATABASE_URL;
 
 const allowedOrigins = [
   "http://localhost:3000",
-  process.env.FRONTEND_PROD_URL,
+  process.env.FRONTEND_PROD_URL?.replace(/\/$/, ""),
   "https://sandbox.sslcommerz.com",
   "https://securepay.sslcommerz.com"
-].filter(Boolean);
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    const normalizedOrigin = origin.replace(/\/$/, "");
 
-    console.log("❌ Blocked by CORS:", origin);
-    return callback(new Error("Not allowed by CORS"));
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ Blocked CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
   },
   credentials: true,
 };
