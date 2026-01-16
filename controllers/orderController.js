@@ -125,12 +125,11 @@ export const getAllOrders = async (req, res) =>{
       const skip = (page - 1) * limit;
       
       const [orders, totalOrders] = await Promise.all([
-        OrderModel.find()
+        OrderModel.find({}, null, {skip, limit})
           .populate("user", "name email")
           .populate("orderItems.product", "name price")
           .sort({placedAt: -1})
-          .skip(skip)
-          .limit(limit),
+          .lean(),
 
         OrderModel.countDocuments()
       ])
