@@ -118,40 +118,58 @@ export const getUserOrders = async (req, res) =>{
     }
 }
 
-export const getAllOrders = async (req, res) =>{
-    try{
-      const page = Math.max(Number(req.query.page) || 1, 1);
-      const limit = Math.max(Number(req.query.limit) || 10, 1);
-      const skip = (page - 1) * limit;
-      
-      const [orders, totalOrders] = await Promise.all([
-        OrderModel.find({}, null, {skip, limit})
-          .populate("user", "name email")
-          .populate("orderItems.product", "name price")
-          .sort({placedAt: -1})
-          .lean(),
+export const getAllOrders = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
+    const skip = (page - 1) * limit;
 
-        OrderModel.countDocuments()
-      ])
+    const orders = await OrderModel.aggregate([
+      { $sort: { placedAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
 
-      res.set("Cache-Control", "no-store");
-
-      res.status(200).json({
-        message: "Orders fetched successfully",
-        orders,
-        pagination: {
-          totalOrders,
-          totalPages: Math.ceil(totalOrders / limit),
-          currentPage: page,
-          limit
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user"
         }
-      });
-    }catch(err){
-      res.status(500).json({
-        message: "Failed to fetch orders",
-        error: err.message
-      })
-    }  
+      },
+      { $unwind: "$user" },
+
+      {
+        $lookup: {
+          from: "products",
+          localField: "orderItems.product",
+          foreignField: "_id",
+          as: "products"
+        }
+      }
+    ]);
+
+    const totalOrders = await OrderModel.countDocuments();
+
+    console.log("ORDERS SENT:", orders.length);
+
+    res.set("Cache-Control", "no-store");
+
+    res.status(200).json({
+      orders,
+      pagination: {
+        totalOrders,
+        totalPages: Math.ceil(totalOrders / limit),
+        currentPage: page,
+        limit
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch orders",
+      error: err.message
+    });
+  }
 };
 
 export const cancelOrder = async (req, res) =>{
