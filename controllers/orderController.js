@@ -120,40 +120,22 @@ export const getUserOrders = async (req, res) =>{
 
 export const getAllOrders = async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
     const skip = (page - 1) * limit;
 
     console.log("🚨 PAGINATION VERSION 5 — LIMIT:", limit);
 
-    const orders = await OrderModel.aggregate([
-      { $sort: { placedAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user"
-        }
-      },
-      { $unwind: "$user" },
-
-      {
-        $lookup: {
-          from: "products",
-          localField: "orderItems.product",
-          foreignField: "_id",
-          as: "products"
-        }
-      }
+    const [orders, totalOrders] = await Promise.all([
+      OrderModel.find()
+        .populate("user", "name email")
+        .populate("orderItems.product", "name price")
+        .sort({ placedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      OrderModel.countDocuments({})
     ]);
-
-    const totalOrders = await OrderModel.countDocuments();
-
-    console.log("ORDERS SENT:", orders.length);
 
     res.set("Cache-Control", "no-store");
 
