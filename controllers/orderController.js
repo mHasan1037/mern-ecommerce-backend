@@ -124,6 +124,8 @@ export const getAllOrders = async (req, res) => {
     const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
     const skip = (page - 1) * limit;
 
+    console.log("🚨 PAGINATION VERSION 5 — LIMIT:", limit);
+
     const orders = await OrderModel.aggregate([
       { $sort: { placedAt: -1 } },
       { $skip: skip },
