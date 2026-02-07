@@ -8,7 +8,6 @@ import {
   cancelOrder,
   getOrderDetails,
   updateOrderStatus,
-  getAllUserOrders,
   placeDirectOrder
 } from "../controllers/orderController.js";
 import adminMiddleware from '../middlewares/adminMiddleware.js';
@@ -36,13 +35,13 @@ router.get(
    getUserOrders
 );
 
-router.get(
-    "/admin/allUsersOrders",
-    accessTokenAutoRefresh,
-    passport.authenticate("jwt", {session: false }),
-    adminMiddleware,
-    getAllUserOrders
-)
+// router.get(
+//     "/admin/allUsersOrders",
+//     accessTokenAutoRefresh,
+//     passport.authenticate("jwt", {session: false }),
+//     adminMiddleware,
+//     getAllUserOrders
+// )
 
 router.get(
    "/admin/orders",
