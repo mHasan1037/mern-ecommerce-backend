@@ -1,7 +1,5 @@
-
 import { classifyIntent } from "../classifier.js";
 import { runTool } from "../tools/index.js";
-
 
 export const classifyIntentNode = async (state) => {
   const { intent, entities } = await classifyIntent(state.message);
@@ -30,41 +28,57 @@ export const formatResponseNode = async (state) => {
           response: { message: "I couldn't find any matching products." },
         };
       }
-      const top = result.products[0];
-
       return {
         response: {
-          message: `Found ${result.total} result(s). Top match: ${top.name} — ৳${top.price}.`,
-          link: top.link,
+          message: `Found ${result.total} result(s):`,
+          card: {
+            type: "product_list",
+            products: result.products.map((p) => ({
+              name: p.name,
+              price: p.price,
+              image: p.image,
+              link: p.link,
+            })),
+          },
         },
       };
     }
 
     case "order_status": {
       if (result?.error === "auth_required") {
-         return {
-            response: {
-              message: "Please log in to check your order status.",
-              action: {
-                type: "open_auth_form",
-                form: result.authForm,       // "login"
-                retryIntent: result.retryIntent,
-                retryArgs: result.retryArgs,
-              },
+        return {
+          response: {
+            message: "Please log in to check your order status.",
+            action: {
+              type: "open_auth_form",
+              form: result.authForm, // "login"
+              retryIntent: result.retryIntent,
+              retryArgs: result.retryArgs,
             },
-          };
+          },
+        };
       }
       if (!result.found) {
         return { response: { message: result.message, link: result.link } };
       }
+
+      const order = result.latestOrder;
+
       return {
         response: {
-          message: `You have ${result.total} orders. Latest: ${result.latestOrder.status}.`,
+          message: `You have ${result.total} orders. Here's your latest one:`,
+          card: {
+            type: "order",
+            status: order.status,
+            total: order.total,
+            placedAt: order.placedAt,
+            items: order.items,
+          },
           link: result.link,
         },
       };
     }
-    
+
     case "policy_query": {
       // static content lookup — not a "tool" in the DB sense, just a map/file
       return { response: { message: getPolicyAnswer(state.entities) } };
