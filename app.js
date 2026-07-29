@@ -10,7 +10,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import chatbotRoutes from "./routes/chatBotRoutes.js";
+import chatRoutes from './routes/chat.routes.js';
 import sslRoutes from "./payment/sslRoutes.js";
 import passport from "passport";
 import "./config/passport-jwt-strategy.js";
@@ -55,7 +55,7 @@ app.use("/api", cartRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", wishlistRoutes);
 app.use("/api", adminRoutes);
-app.use("/api", chatbotRoutes);
+app.use("/api", chatRoutes);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server is listing at http://0.0.0.0:${port}`);

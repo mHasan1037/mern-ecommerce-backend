@@ -1,6 +1,7 @@
 import OrderModel from "../models/Order.js";
 import ProductModel from "../models/Product.js";
 import UserModel from "../models/User.js";
+import { findUserOrders } from "../services/order.service.js";
 import sendOrderStatusEmail from "../utils/orderStatusEmail.js";
 
 export const placeOrder = async (req, res) =>{
@@ -100,11 +101,7 @@ export const placeDirectOrder = async (req, res) =>{
 
 export const getUserOrders = async (req, res) =>{
     try{
-       const userId = req.user._id;
-
-       const orders = await OrderModel.find({ user: userId })
-         .populate("orderItems.product", "name price images")
-         .sort({ placedAt: -1 });
+       const orders = await findUserOrders(req.user._id);
       
        res.status(200).json({
         message: "Your orders",
@@ -137,8 +134,6 @@ export const getAllOrders = async (req, res) => {
     ]);
 
     res.set("Cache-Control", "no-store");
-
-    console.log("total pages", Math.ceil(totalOrders / limit));
 
     res.status(200).json({
       orders,
@@ -197,37 +192,17 @@ export const cancelOrder = async (req, res) =>{
 }
 
 export const getOrderDetails = async (req, res) =>{
-    try{
-       const orderId = req.params.id;
-       const userId = req.user._id;
-       const isAdmin = req.user.is_admin;
+   try {
+    const { id } = req.params;
+    const { error, order } = await findOrderById(id, req.user._id, req.user.is_admin);
 
-       const order = await OrderModel.findById(orderId)
-          .populate("orderItems.product", "name price images")
-          .populate("user", "name email")
+    if (error === "not_found") return res.status(404).json({ message: "Order not found" });
+    if (error === "not_authorized") return res.status(403).json({ message: "Not authorized to view this order" });
 
-       if(!order){
-        return res.status(404).json({
-            message: "Order not found"
-        })
-       };
-
-       if(!isAdmin && order.user._id.toString() !== userId.toString()){
-        return res.status(403).json({
-            message: "Not authorized to view this order"
-        })
-       }
-
-       res.status(200).json({
-        message: "Order details fetched successfully",
-        order
-       })
-    }catch(err){
-       res.status(500).json({
-        message: "Failed to fetch order details",
-        error: err.message
-       })
-    }
+    res.status(200).json({ message: "Order details fetched successfully", order });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch order details", error: err.message });
+  }
 }
 
 export const updateOrderStatus = async (req, res) =>{
