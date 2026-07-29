@@ -1,7 +1,7 @@
 import OrderModel from "../models/Order.js";
 import ProductModel from "../models/Product.js";
 import UserModel from "../models/User.js";
-import { findUserOrders } from "../services/order.service.js";
+import { findOrderById, findUserOrders } from "../services/order.service.js";
 import sendOrderStatusEmail from "../utils/orderStatusEmail.js";
 
 export const placeOrder = async (req, res) =>{
