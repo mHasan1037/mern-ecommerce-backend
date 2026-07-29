@@ -11,7 +11,6 @@ export const orderTool = {
     if (!orders.length) {
       return { found: false, message: "You don't have any orders yet.", link: "/orders" };
     }
-
     const latest = orders[0];
 
     return {
@@ -21,7 +20,13 @@ export const orderTool = {
         id: latest._id.toString(),
         status: latest.status,
         total: latest.totalAmount,
-        placedAt: latest.placedAt
+        placedAt: latest.placedAt,
+        items: latest.orderItems.map((item) =>({
+          name: item.product?.name ?? "Unknown product",
+          price: item.product?.price ?? null,
+          image: item.product?.images?.[0] ?? null,
+          quantity: item.quantity,
+        }))
       },
       link: "/account/all_orders"
     };
