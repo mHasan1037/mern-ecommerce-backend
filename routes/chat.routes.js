@@ -7,14 +7,16 @@ const router = Router();
 
 router.post("/chat", optionalAuth, async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, intent, entities } = req.body;
 
-    if (!message || typeof message !== "string") {
+    if (!intent && (!message || typeof message !== "string")) {
       return res.status(400).json({ message: "Message is required" });
     }
 
     const result = await chatGraph.invoke({
-      message,
+      message: message ?? null,
+      intent: intent ?? undefined,
+      entities: entities ?? undefined,
       isAuthenticated: req.isAuthenticated,
       userId: req.user?._id ?? null
     });
