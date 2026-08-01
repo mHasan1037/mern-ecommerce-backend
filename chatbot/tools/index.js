@@ -1,10 +1,12 @@
+import { comparisonTool } from "./comparisonTool.js";
 import { orderTool } from "./order.tool.js";
 import { productTool } from "./product.tool.js";
 
 
 export const tools = {
     product_query : productTool,
-    order_status : orderTool
+    order_status : orderTool,
+    product_comparison: comparisonTool
 }
 
 export const runTool = async(intent, args, context) =>{
@@ -17,8 +19,8 @@ export const runTool = async(intent, args, context) =>{
   if (tool.requiresAuth && !context.isAuthenticated) {
     return {
       error: "auth_required",
-      authForm: "login",       // matches your AuthFormType
-      retryIntent: intent,     // so you can auto-retry after login (optional but nice)
+      authForm: "login",      
+      retryIntent: intent,   
       retryArgs: args,
     };
   }

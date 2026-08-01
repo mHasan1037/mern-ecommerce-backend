@@ -1,14 +1,17 @@
+import { generateComparisonText } from "../../utils/comparisonFormatter.js";
 import { classifyIntent } from "../classifier.js";
 import { runTool } from "../tools/index.js";
 
 export const classifyIntentNode = async (state) => {
+  if (state.intent) return {};
   const { intent, entities } = await classifyIntent(state.message);
   return { intent, entities };
 };
 
 export const runToolNode = async (state) => {
-  if (state.intent === "general_chat" || state.intent === "policy_query")
-    return;
+  if (state.intent === "general_chat" || state.intent === "policy_query"){
+    return {}
+  }
 
   const result = await runTool(state.intent, state.entities, {
     isAuthenticated: state.isAuthenticated,
@@ -78,6 +81,29 @@ export const formatResponseNode = async (state) => {
         },
       };
     }
+
+    case "product_comparison":
+      {
+        if (!result?.found) {
+          return {
+            response: {
+              message: result?.message ?? "Couldn't compare those products.",
+            },
+          };
+        }
+      }
+
+      const naturalComparison = await generateComparisonText(result.products);
+
+      return {
+        response: {
+          message: naturalComparison,
+          card: {
+            type: "comparison",
+            products: result.products,
+          },
+        },
+      };
 
     case "policy_query": {
       // static content lookup — not a "tool" in the DB sense, just a map/file
