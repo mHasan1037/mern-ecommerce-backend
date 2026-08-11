@@ -1,8 +1,8 @@
-import { classifierOllamaModel } from "../utils/aiModels.js";
+import { classifierGroqModel } from "../utils/aiModels.js";
 import { CLASSIFIER_SYSTEM_PROMPT } from "../utils/aiPrompts.js";
 
 export const classifyIntent = async (message) => {
-  const response = await classifierOllamaModel.invoke([
+  const response = await classifierGroqModel.invoke([
     { role: "system", content: CLASSIFIER_SYSTEM_PROMPT },
     { role: "user", content: message }
   ]);
