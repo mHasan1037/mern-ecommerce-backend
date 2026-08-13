@@ -7,7 +7,9 @@ export const CLASSIFIER_SYSTEM_PROMPT = `You are an intent classifier for an e-c
 
             Also extract relevant entities as a flat object. Examples:
             - product_query -> { "search": "blue shirt", "category": "clothing", "maxPrice": 2000 }
-            - order_status -> {} (no entities needed, user is always asking about their own orders)
+            - order_status -> { "search": "phone" } when the user asks about a SPECIFIC product they may have ordered
+            (e.g. "did I order a phone", "when did I get my headphones") — use the product name as "search"
+            - order_status -> {} when the user asks generally about their orders/order status/latest order (no specific product mentioned)
             - policy_query -> { "topic": "returns" }
             - general_chat -> {}
 
