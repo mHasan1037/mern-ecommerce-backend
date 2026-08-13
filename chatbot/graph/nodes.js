@@ -54,7 +54,7 @@ export const formatResponseNode = async (state) => {
             message: "Please log in to check your order status.",
             action: {
               type: "open_auth_form",
-              form: result.authForm, // "login"
+              form: result.authForm,
               retryIntent: result.retryIntent,
               retryArgs: result.retryArgs,
             },
@@ -63,6 +63,19 @@ export const formatResponseNode = async (state) => {
       }
       if (!result.found) {
         return { response: { message: result.message, link: result.link } };
+      }
+
+      if (result.mode === "search") {
+        return {
+          response: {
+            message: `You ordered "${result.search}" ${result.total} time(s).`,
+            card: {
+              type: "order_list",
+              orders: result.orders,
+            },
+            link: result.link,
+          },
+        };
       }
 
       const order = result.latestOrder;
