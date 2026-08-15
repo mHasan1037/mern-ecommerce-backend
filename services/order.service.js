@@ -1,9 +1,29 @@
 import OrderModel from "../models/Order.js";
 
-export const findUserOrders = async (userId) => {
-  return OrderModel.find({ user: userId })
-    .populate("orderItems.product", "name price images")
-    .sort({ placedAt: -1 });
+export const findUserOrders = async (userId, {page = 1, limit = 10, status}) => {
+  const skip = (page - 1) * limit;
+  const query = { user: userId };
+
+  if (status) {
+    query.status = status;
+  }
+
+  const [orders, total] = await Promise.all([
+    OrderModel.find(query)
+      .populate("orderItems.product", "name price images")
+      .sort({ placedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    OrderModel.countDocuments(query)
+  ]);
+
+  return {
+    orders,
+    total,
+    page: Number(page),
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 export const findOrderById = async (orderId, userId, isAdmin) => {
