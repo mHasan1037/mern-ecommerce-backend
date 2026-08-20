@@ -11,7 +11,8 @@ import {
   deleteProductImage,
   getMostSoldProducts,
   getCategoryById,
-  updateCategory
+  updateCategory,
+  getFeaturedProducts
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -66,6 +67,8 @@ router.get(
   "/products/most-sold", 
   getMostSoldProducts
 );
+
+router.get("/products/featured", getFeaturedProducts);
 
 router.put(
   "/products/:id",

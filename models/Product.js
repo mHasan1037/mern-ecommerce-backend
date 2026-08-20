@@ -33,6 +33,8 @@ const productSchema = new mongoose.Schema({
         }
     ],
     is_featured: { type: Boolean, default: false },
+    featured_order: { type: Number, default: 0 },
+    featured_at: { type: Date, default: null },
 }, { timestamps: true })
 
 const ProductModel = mongoose.model('product', productSchema);
