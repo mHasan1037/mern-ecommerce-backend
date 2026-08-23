@@ -18,8 +18,12 @@ const categorySchema = new mongoose.Schema(
   }
     },
     image: {
-      url: { type: String, required: true },
-      public_id: { type: String, required: true },
+      type: {
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+      },
+      required: false,
+      default: null
     },
     isDeleted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },

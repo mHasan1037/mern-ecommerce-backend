@@ -10,10 +10,6 @@ export const createCategory = async (req, res) => {
   try {
     const { name, description, parentCategory, image } = req.body;
 
-    if (!image || !image.url || !image.public_id) {
-      return res.status(400).json({ message: "Image is required" });
-    }
-
     const existingCategory = await CategoryModel.findOne({ name });
     if (existingCategory) {
       return res.status(400).json({
@@ -38,7 +34,7 @@ export const createCategory = async (req, res) => {
       name,
       description,
       parentCategory: parentCategory || null,
-      image,
+      image: image || null,
     });
     await newCategory.save();
 
