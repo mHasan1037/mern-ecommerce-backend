@@ -115,6 +115,22 @@ export const updateCategory = async (req, res) => {
       updateData.parentCategory = null;
     }
 
+    // const existingCategory = await CategoryModel.findById(id);
+    // if (!existingCategory) {
+    //   return res.status(404).json({ message: "Category not found" });
+    // }
+
+    // const oldPublicImageId = existingCategory.image?.public_id;
+    // const newPublicImageId = updateData.image?.public_id;
+
+    // if (oldPublicImageId && oldPublicImageId !== newPublicImageId) {
+    //   try {
+    //     await cloudinary.uploader.destroy(oldPublicImageId);
+    //   } catch (err) {
+    //     console.warn("Failed to delete old category image:", err);
+    //   }
+    // }
+
     const updatedCategory = await CategoryModel.findByIdAndUpdate(
       id,
       updateData,
@@ -134,6 +150,70 @@ export const updateCategory = async (req, res) => {
   } catch (error) {
     console.error("Update error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reassignTo } = req.body;
+
+    const category = await CategoryModel.findById(id);
+    if(!category){
+      return res.status(404).json({message: "Category not found"})
+    }
+
+    const productCount = await ProductModel.countDocuments({ category: id });
+
+    if (productCount > 0) {
+      if (!reassignTo) {
+        return res.status(409).json({
+          message:
+            "This category has products. Reassign category to a different category first.",
+          productCount,
+        });
+      }
+
+      if(reassignTo === id){
+        return res.status(400).json({
+          message: "Cannot reassign products to the category being deleted.",
+        });
+      }
+
+      const targetExists = await CategoryModel.exists({
+        _id: reassignTo,
+        isDeleted: false,
+      });
+      if (!targetExists) {
+        return res.status(400).json({
+          message: "Target category invalid",
+        });
+      }
+
+      await ProductModel.updateMany(
+        { category: id },
+        { $set: { category: reassignTo } },
+      );
+    }
+
+    if (category.image?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(category.image.public_id);
+      } catch (err) {
+        console.warn("Failed to delete category image:", err);
+      }
+    }
+    
+    await CategoryModel.findByIdAndUpdate(id, { isDeleted: true });
+
+    return res
+      .status(200)
+      .json({ message: "Category deleted and products reassigned" });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Server error while deleting category",
+      error: err.message,
+    });
   }
 };
 
