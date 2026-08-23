@@ -2,6 +2,7 @@ import express from "express";
 import {
   createCategory,
   getAllCategories,
+  deleteCategory,
   uploadProduct,
   getAllProducts,
   updateProduct,
@@ -46,6 +47,14 @@ router.put(
   passport.authenticate('jwt', { session: false }),
   adminMiddleware,
   updateCategory
+);
+
+router.delete(
+  "/categories/:id",
+  accessTokenAutoRefresh,
+  passport.authenticate('jwt', { session: false }),
+  adminMiddleware,
+  deleteCategory
 )
 
 router.post(
