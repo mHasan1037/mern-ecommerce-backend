@@ -7,3 +7,11 @@ cloudinary.config({
 });
 
 export default cloudinary;
+
+export async function safeDestroy(publicId) {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (err) {
+    console.error(`Failed to clean up Cloudinary asset ${publicId}:`, err);
+  }
+}

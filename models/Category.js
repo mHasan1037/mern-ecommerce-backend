@@ -3,8 +3,8 @@ import slugify from "slugify";
 
 const categorySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, unique: true },
-    slug: { type: String, unique: true },
+    name: { type: String, required: true, trim: true},
+    slug: { type: String},
     description: { type: String, trim: true },
     parentCategory: {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +32,16 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+categorySchema.index(
+  { name: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
+
+categorySchema.index(
+  { slug: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
+
 categorySchema.pre("save", async function (next) {
   if (!this.isModified("name")) return next();
 
@@ -40,7 +50,7 @@ categorySchema.pre("save", async function (next) {
   let finalSlug = baseSlug;
   let counter = 1;
 
-  while(await mongoose.models.category.findOne({slug: finalSlug})){
+  while(await mongoose.models.category.findOne({slug: finalSlug, isDeleted: false})){
     finalSlug = `${baseSlug} - ${counter}`;
     counter++;
   }

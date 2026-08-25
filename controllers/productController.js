@@ -1,17 +1,23 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
-import cloudinary from "../utils/cloudinary.js";
+import cloudinary, { safeDestroy } from "../utils/cloudinary.js";
 import OrderModel from "../models/Order.js";
 import { findProducts } from "../services/product.service.js";
-import { MAX_FEATURED_PRODUCTS, PRODUCT_UPDATABLE_FIELDS } from "../utils/constants.js";
+import {
+  MAX_FEATURED_PRODUCTS,
+  PRODUCT_UPDATABLE_FIELDS,
+} from "../utils/constants.js";
 
 export const createCategory = async (req, res) => {
+  let image;
   try {
-    const { name, description, parentCategory, image } = req.body;
+    const { name, description, parentCategory } = req.body;
+    image = req.body.image;
 
-    const existingCategory = await CategoryModel.findOne({ name });
+    const existingCategory = await CategoryModel.findOne({ name, isDeleted: false });
     if (existingCategory) {
+      if (image?.public_id) await safeDestroy(image.public_id);
       return res.status(400).json({
         message: "Category already exists",
       });
@@ -19,6 +25,7 @@ export const createCategory = async (req, res) => {
 
     if (parentCategory) {
       if (!mongoose.Types.ObjectId.isValid(parentCategory)) {
+        if (image?.public_id) await safeDestroy(image.public_id);
         return res.status(400).json({
           message: "Invalide parent category",
         });
@@ -26,6 +33,7 @@ export const createCategory = async (req, res) => {
 
       const parentExists = await CategoryModel.findById(parentCategory);
       if (!parentExists) {
+        if (image?.public_id) await safeDestroy(image.public_id);
         return res.status(404).json({ message: "Parent category not found" });
       }
     }
@@ -43,7 +51,8 @@ export const createCategory = async (req, res) => {
       category: newCategory,
     });
   } catch (error) {
-    res
+    if (image?.public_id) await safeDestroy(image.public_id);
+    return res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
@@ -104,28 +113,19 @@ export const updateCategory = async (req, res) => {
     return res.status(400).json({ message: "Invalid category ID" });
   }
 
-  try {
-    const updateData = { ...req.body };
+  const updateData = { ...req.body };
+  if (updateData.parentCategory === "") updateData.parentCategory = null;
 
-    if (updateData.parentCategory === "") {
-      updateData.parentCategory = null;
+  try {
+    const existingCategory = await CategoryModel.findById(id);
+    if (!existingCategory) {
+      if (updateData.image?.public_id)
+        await safeDestroy(updateData.image.public_id);
+      return res.status(404).json({ message: "Category not found" });
     }
 
-    // const existingCategory = await CategoryModel.findById(id);
-    // if (!existingCategory) {
-    //   return res.status(404).json({ message: "Category not found" });
-    // }
-
-    // const oldPublicImageId = existingCategory.image?.public_id;
-    // const newPublicImageId = updateData.image?.public_id;
-
-    // if (oldPublicImageId && oldPublicImageId !== newPublicImageId) {
-    //   try {
-    //     await cloudinary.uploader.destroy(oldPublicImageId);
-    //   } catch (err) {
-    //     console.warn("Failed to delete old category image:", err);
-    //   }
-    // }
+    const oldPublicImageId = existingCategory.image?.public_id;
+    const newPublicImageId = updateData.image?.public_id;
 
     const updatedCategory = await CategoryModel.findByIdAndUpdate(
       id,
@@ -136,14 +136,19 @@ export const updateCategory = async (req, res) => {
       },
     );
 
-    if (!updatedCategory) {
-      return res.status(404).json({ message: "Category not found" });
+    if (
+      oldPublicImageId &&
+      newPublicImageId &&
+      oldPublicImageId !== newPublicImageId
+    ) {
+      await safeDestroy(oldPublicImageId);
     }
 
     res
       .status(200)
       .json({ message: "Category updated", category: updatedCategory });
   } catch (error) {
+    if (updateData.image?.public_id) await safeDestroy(updateData.image.public_id);
     console.error("Update error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
@@ -155,8 +160,8 @@ export const deleteCategory = async (req, res) => {
     const { reassignTo } = req.body;
 
     const category = await CategoryModel.findById(id);
-    if(!category){
-      return res.status(404).json({message: "Category not found"})
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
     }
 
     const productCount = await ProductModel.countDocuments({ category: id });
@@ -170,7 +175,7 @@ export const deleteCategory = async (req, res) => {
         });
       }
 
-      if(reassignTo === id){
+      if (reassignTo === id) {
         return res.status(400).json({
           message: "Cannot reassign products to the category being deleted.",
         });
