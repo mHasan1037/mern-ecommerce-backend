@@ -125,40 +125,42 @@ export const updateCategory = async (req, res) => {
     }
 
      if (updateData.name) {
-      const duplicateCategory = await CategoryModel.findOne({
-        name: updateData.name,
-        isDeleted: false,
-        _id: { $ne: id },
-      });
-      if (duplicateCategory) {
-        if (updateData.image?.public_id)
-          await safeDestroy(updateData.image.public_id);
-        return res.status(400).json({ message: "Category already exists" });
-      }
-    }
+       const duplicateCategory = await CategoryModel.findOne({
+         name: updateData.name,
+         isDeleted: false,
+         _id: { $ne: id },
+       });
+       if (duplicateCategory) {
+         if (updateData.image?.public_id)
+           await safeDestroy(updateData.image.public_id);
+         return res.status(400).json({ message: "Category already exists" });
+       }
+     }
 
-    if (updateData.parentCategory) {
-      if (!mongoose.Types.ObjectId.isValid(updateData.parentCategory)) {
-        if (updateData.image?.public_id)
-          await safeDestroy(updateData.image.public_id);
-        return res.status(400).json({ message: "Invalid parent category" });
-      }
+     if (updateData.parentCategory) {
+       if (!mongoose.Types.ObjectId.isValid(updateData.parentCategory)) {
+         if (updateData.image?.public_id)
+           await safeDestroy(updateData.image.public_id);
+         return res.status(400).json({ message: "Invalid parent category" });
+       }
 
-      if (updateData.parentCategory === id) {
-        if (updateData.image?.public_id)
-          await safeDestroy(updateData.image.public_id);
-        return res
-          .status(400)
-          .json({ message: "Category cannot be its own parent" });
-      }
+       if (updateData.parentCategory === id) {
+         if (updateData.image?.public_id)
+           await safeDestroy(updateData.image.public_id);
+         return res
+           .status(400)
+           .json({ message: "Category cannot be its own parent" });
+       }
 
-      const parentExists = await CategoryModel.findById(updateData.parentCategory);
-      if (!parentExists) {
-        if (updateData.image?.public_id)
-          await safeDestroy(updateData.image.public_id);
-        return res.status(404).json({ message: "Parent category not found" });
-      }
-    }
+       const parentExists = await CategoryModel.findById(
+         updateData.parentCategory,
+       );
+       if (!parentExists) {
+         if (updateData.image?.public_id)
+           await safeDestroy(updateData.image.public_id);
+         return res.status(404).json({ message: "Parent category not found" });
+       }
+     }
 
     const oldPublicImageId = existingCategory.image?.public_id;
     const newPublicImageId = updateData.image?.public_id;
