@@ -13,7 +13,8 @@ import {
   getMostSoldProducts,
   getCategoryById,
   updateCategory,
-  getFeaturedProducts
+  getFeaturedProducts,
+  reorderCategires
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -55,6 +56,14 @@ router.delete(
   passport.authenticate('jwt', { session: false }),
   adminMiddleware,
   deleteCategory
+);
+
+router.patch(
+  "/categories/reorder",
+  accessTokenAutoRefresh,
+  passport.authenticate('jwt', { session: false }),
+  adminMiddleware,
+  reorderCategires,
 )
 
 router.post(

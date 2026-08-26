@@ -25,6 +25,7 @@ const categorySchema = new mongoose.Schema(
       required: false,
       default: null
     },
+    sortOrder: { type: Number, index: true },
     isDeleted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
@@ -43,6 +44,13 @@ categorySchema.index(
 );
 
 categorySchema.pre("save", async function (next) {
+  if (this.isNew && this.sortOrder === undefined) {
+    const last = await mongoose.models.category
+      .findOne({ isDeleted: false })
+      .sort({ sortOrder: -1 });
+    this.sortOrder = last ? last.sortOrder + 1 : 0;
+  }
+
   if (!this.isModified("name")) return next();
 
   const baseSlug = slugify(this.name, {lower: true, strict: true });
@@ -50,8 +58,8 @@ categorySchema.pre("save", async function (next) {
   let finalSlug = baseSlug;
   let counter = 1;
 
-  while(await mongoose.models.category.findOne({slug: finalSlug, isDeleted: false})){
-    finalSlug = `${baseSlug} - ${counter}`;
+  while(await mongoose.models.category.findOne({slug: finalSlug, isDeleted: false, _id: { $ne: this._id },})){
+    finalSlug = `${baseSlug}-${counter}`;
     counter++;
   }
 

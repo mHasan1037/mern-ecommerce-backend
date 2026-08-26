@@ -62,6 +62,7 @@ export const getAllCategories = async (req, res) => {
   try {
     const allCategories = await CategoryModel.find({ isDeleted: false })
       .populate("parentCategory", "name")
+      .sort({ sortOrder: 1 })
       .exec();
 
     if (allCategories.length === 0) {
@@ -253,6 +254,26 @@ export const deleteCategory = async (req, res) => {
       message: "Server error while deleting category",
       error: err.message,
     });
+  }
+};
+
+
+export const reorderCategires = async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: { filter: { _id: id }, update: { sortOrder: index } },
+    }));
+
+    await CategoryModel.bulkWrite(bulkOps);
+
+    const updated = await CategoryModel.find({ isDeleted: false }).sort({
+      sortOrder: 1,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to reorder categories" });
   }
 };
 
