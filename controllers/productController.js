@@ -485,7 +485,6 @@ export const updateProduct = async (req, res) => {
         message: "Product not found",
       });
     };
-    console.log('updatedProduct', updatedProduct)
 
     return res.status(200).json({
       message: "Product updated successfully",
@@ -528,7 +527,11 @@ export const deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
 
-    const deleteProduct = await ProductModel.findById(productId);
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product id" });
+    }
+
+    const deleteProduct = await ProductModel.findByIdAndDelete(productId);
 
     if (!deleteProduct) {
       return res.status(404).json({
@@ -545,8 +548,6 @@ export const deleteProduct = async (req, res) => {
         }
       }
     }
-
-    await ProductModel.findByIdAndDelete(productId);
 
     return res.status(200).json({
       message: "Product delete successfully",
@@ -637,7 +638,7 @@ export const deleteProductImage = async (req, res) => {
 
     const result = await cloudinary.uploader.destroy(publicId);
 
-    if (result.result !== "ok") {
+    if (result.result !== "ok" && result.result !== "not found") {
       return res.status(500).json({
         message: "Failed to delete image",
       });
