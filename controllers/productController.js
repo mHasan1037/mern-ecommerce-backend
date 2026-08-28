@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
-import cloudinary, { safeDestroy } from "../utils/cloudinary.js";
+import cloudinary, { safeDestroy, safeDestroyMany } from "../utils/cloudinary.js";
 import OrderModel from "../models/Order.js";
 import { findProducts } from "../services/product.service.js";
 import {
@@ -10,14 +10,11 @@ import {
 } from "../utils/constants.js";
 
 export const createCategory = async (req, res) => {
-  let image;
   try {
-    const { name, description, parentCategory } = req.body;
-    image = req.body.image;
+    const { name, description, parentCategory, image } = req.body;
 
     const existingCategory = await CategoryModel.findOne({ name, isDeleted: false });
     if (existingCategory) {
-      if (image?.public_id) await safeDestroy(image.public_id);
       return res.status(400).json({
         message: "Category already exists",
       });
@@ -25,7 +22,6 @@ export const createCategory = async (req, res) => {
 
     if (parentCategory) {
       if (!mongoose.Types.ObjectId.isValid(parentCategory)) {
-        if (image?.public_id) await safeDestroy(image.public_id);
         return res.status(400).json({
           message: "Invalide parent category",
         });
@@ -33,7 +29,6 @@ export const createCategory = async (req, res) => {
 
       const parentExists = await CategoryModel.findById(parentCategory);
       if (!parentExists) {
-        if (image?.public_id) await safeDestroy(image.public_id);
         return res.status(404).json({ message: "Parent category not found" });
       }
     }
@@ -51,7 +46,6 @@ export const createCategory = async (req, res) => {
       category: newCategory,
     });
   } catch (error) {
-    if (image?.public_id) await safeDestroy(image.public_id);
     return res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
@@ -120,8 +114,6 @@ export const updateCategory = async (req, res) => {
   try {
     const existingCategory = await CategoryModel.findById(id);
     if (!existingCategory) {
-      if (updateData.image?.public_id)
-        await safeDestroy(updateData.image.public_id);
       return res.status(404).json({ message: "Category not found" });
     }
 
@@ -133,21 +125,16 @@ export const updateCategory = async (req, res) => {
        });
        if (duplicateCategory) {
          if (updateData.image?.public_id)
-           await safeDestroy(updateData.image.public_id);
          return res.status(400).json({ message: "Category already exists" });
        }
      }
 
      if (updateData.parentCategory) {
        if (!mongoose.Types.ObjectId.isValid(updateData.parentCategory)) {
-         if (updateData.image?.public_id)
-           await safeDestroy(updateData.image.public_id);
          return res.status(400).json({ message: "Invalid parent category" });
        }
 
        if (updateData.parentCategory === id) {
-         if (updateData.image?.public_id)
-           await safeDestroy(updateData.image.public_id);
          return res
            .status(400)
            .json({ message: "Category cannot be its own parent" });
@@ -157,8 +144,6 @@ export const updateCategory = async (req, res) => {
          updateData.parentCategory,
        );
        if (!parentExists) {
-         if (updateData.image?.public_id)
-           await safeDestroy(updateData.image.public_id);
          return res.status(404).json({ message: "Parent category not found" });
        }
      }
@@ -187,8 +172,6 @@ export const updateCategory = async (req, res) => {
       .status(200)
       .json({ message: "Category updated", category: updatedCategory });
   } catch (error) {
-    if (updateData.image?.public_id) await safeDestroy(updateData.image.public_id);
-    console.error("Update error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -381,12 +364,10 @@ export const getAllProducts = async (req, res) => {
 };
 
 export const updateProduct = async (req, res) => {
+  const productId = req.params.id;
+  const body = req.body;
+  const updatedData = {};
   try {
-    const productId = req.params.id;
-    const body = req.body;
-
-    const updatedData = {};
-
     for (const field of PRODUCT_UPDATABLE_FIELDS) {
       if (body[field] !== undefined) {
         updatedData[field] = body[field];
@@ -474,6 +455,16 @@ export const updateProduct = async (req, res) => {
       updatedData.featured_at = null;
     }
 
+    let oldImages = [];
+    if (updatedData.images) {
+      const existingProduct =
+        await ProductModel.findById(productId).select("images");
+      if (!existingProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      oldImages = existingProduct.images || [];
+    }
+
     const updatedProduct = await ProductModel.findByIdAndUpdate(
       productId,
       updatedData,
@@ -484,7 +475,17 @@ export const updateProduct = async (req, res) => {
       return res.status(404).json({
         message: "Product not found",
       });
-    };
+    }
+
+    if (updatedData.images) {
+      const newPublicIds = new Set(
+        updatedData.images.map((img) => img.public_id).filter(Boolean),
+      );
+      const removedImages = oldImages.filter(
+        (img) => img?.public_id && !newPublicIds.has(img.public_id),
+      );
+      await safeDestroyMany(removedImages);
+    }
 
     return res.status(200).json({
       message: "Product updated successfully",

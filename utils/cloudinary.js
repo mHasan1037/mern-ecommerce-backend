@@ -15,3 +15,12 @@ export async function safeDestroy(publicId) {
     console.error(`Failed to clean up Cloudinary asset ${publicId}:`, err);
   }
 }
+
+export const safeDestroyMany = async (images) => {
+  if (!Array.isArray(images) || images.length === 0) return;
+  await Promise.all(
+    images
+      .filter((img) => img?.public_id)
+      .map((img) => safeDestroy(img.public_id))
+  );
+};
