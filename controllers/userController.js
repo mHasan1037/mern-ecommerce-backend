@@ -1,5 +1,5 @@
 import UserModel from "../models/User.js";
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 import sendEmailVerificationOTP from "../utils/sendEmailVerificationOTP.js";
 import EmailVerificationModel from "../models/EmailVerification.js";
 import generateTokens from "../utils/generateTokens.js";
@@ -8,6 +8,7 @@ import UserRefreshTokenModel from "../models/UserRefreshToken.js";
 import transporter from "../config/emailConfig.js";
 import jwt from "jsonwebtoken";
 import { getFullUserProfile } from "../utils/getUserProfile.js";
+import { validatePassword } from "../helpers/validatePassword .js";
 
 export const userRegistration = async (req, res) => {
   try {
@@ -23,6 +24,15 @@ export const userRegistration = async (req, res) => {
       return res
         .status(400)
         .json({ status: "failed", message: "Password do not match" });
+    }
+
+    const passwordErrors = validatePassword(password);
+
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        status: "failed",
+        message: passwordErrors[0],
+      });
     }
 
     const existingUser = await UserModel.findOne({ email });
@@ -106,7 +116,7 @@ export const verifyEmail = async (req, res) => {
 
     const currentTime = new Date();
     const expirationTime = new Date(
-      emailVerification.createdAt.getTime() + 15 * 60 * 1000
+      emailVerification.createdAt.getTime() + 15 * 60 * 1000,
     );
 
     if (currentTime > expirationTime) {
@@ -179,7 +189,7 @@ export const userLogin = async (req, res) => {
       accessToken,
       refreshToken,
       accessTokenExp,
-      refreshTokenExp
+      refreshTokenExp,
     );
 
     res.status(200).json({
@@ -207,29 +217,29 @@ export const userLogin = async (req, res) => {
 };
 
 export const userProfile = async (req, res) => {
-   try {
+  try {
     const profile = await getFullUserProfile(req.user._id);
-    res.status(200).json({user: profile, is_auth: true})
-   } catch (error) {
-     res.status(500).json({ message: "Server error" });
-   }
+    res.status(200).json({ user: profile, is_auth: true });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
-export const getUserProfileById = async (req, res) =>{
+export const getUserProfileById = async (req, res) => {
   try {
     const profile = await getFullUserProfile(req.params.id);
     res.status(200).json({ user: profile });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const userLogout = async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     await UserRefreshTokenModel.findOneAndUpdate(
       { token: refreshToken },
-      { $set: { blacklisted: true } }
+      { $set: { blacklisted: true } },
     );
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
@@ -261,6 +271,14 @@ export const changeUserPassword = async (req, res) => {
       return res.status(400).json({
         status: "failed",
         message: "New password and confirm new password don't match",
+      });
+    }
+
+    const passwordErrors = validatePassword(password);
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        status: "failed",
+        message: passwordErrors[0],
       });
     }
 
@@ -309,7 +327,7 @@ export const sendUserPasswordResetEmail = async (req, res) => {
         userId: user._id,
       },
       secret,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const resetLink = `${process.env.FRONTEND_HOST}/account/reset-password-confirm/${user._id}/${token}`;
