@@ -7,23 +7,26 @@ const generateTokens = async (user) => {
     const accessTokenExp = Math.floor(Date.now() / 1000) + 60 * 15;
     const accessToken = jwt.sign(
       { ...payload, exp: accessTokenExp },
-      process.env.JWT_ACCESS_TOKEN_SECRET_KEY
+      process.env.JWT_ACCESS_TOKEN_SECRET_KEY,
     );
 
     const refreshTokenExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
     const refreshToken = jwt.sign(
       { ...payload, exp: refreshTokenExp },
-      process.env.JWT_REFRESH_TOKEN_SECRET_KEY
+      process.env.JWT_REFRESH_TOKEN_SECRET_KEY,
     );
 
-    const userRefreshToken = await UserRefreshTokenModel.findOneAndDelete({
-      userId: user._id,
-    });
+    const existing = await UserRefreshTokenModel.findOne({ userId: user._id });
 
-    await new UserRefreshTokenModel({
-      userId: user._id,
-      token: refreshToken,
-    }).save();
+    await UserRefreshTokenModel.findOneAndUpdate(
+      { userId: user._id },
+      {
+        token: refreshToken,
+        previousToken: existing?.token || null,
+        rotatedAt: new Date(),
+      },
+      { upsert: true },
+    );
 
     return Promise.resolve({
       accessToken,

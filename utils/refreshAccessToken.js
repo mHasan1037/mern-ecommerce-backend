@@ -9,7 +9,7 @@ const refreshAccessToken = async (req, res) => {
 
     const tokenDetails = jwt.verify(
       oldRefreshToken,
-      process.env.JWT_REFRESH_TOKEN_SECRET_KEY
+      process.env.JWT_REFRESH_TOKEN_SECRET_KEY,
     );
 
     const user = await UserModel.findById(tokenDetails._id);
@@ -25,14 +25,49 @@ const refreshAccessToken = async (req, res) => {
       userId: tokenDetails._id,
     });
 
-    if (
-      oldRefreshToken !== userRefreshToken.token ||
-      userRefreshToken.blacklisted
-    ) {
+    if (!userRefreshToken || userRefreshToken.blacklisted) {
       return res.status(401).send({
         status: "failed",
         message: "Unauthorized access",
       });
+    }
+
+    const isCurrent = oldRefreshToken === userRefreshToken.token;
+    const isRecentPrevious =
+      oldRefreshToken === userRefreshToken.previousToken &&
+      userRefreshToken.rotatedAt &&
+      Date.now() - userRefreshToken.rotatedAt.getTime() < 5000; // 5s grace window
+
+    if (!isCurrent && !isRecentPrevious) {
+      return res.status(401).send({
+        status: "failed",
+        message: "Unauthorized access",
+      });
+    }
+
+    if (isRecentPrevious) {
+      const currentPayload = jwt.verify(
+        userRefreshToken.token,
+        process.env.JWT_REFRESH_TOKEN_SECRET_KEY,
+      );
+
+      const accessTokenExp = Math.floor(Date.now() / 1000) + 60 * 15;
+
+      const newAccessToken = jwt.sign(
+        {
+          _id: currentPayload._id,
+          roles: currentPayload.roles,
+          exp: accessTokenExp,
+        },
+        process.env.JWT_ACCESS_TOKEN_SECRET_KEY,
+      );
+
+      return {
+        newAccessToken,
+        newRefreshToken: userRefreshToken.token,
+        newAccessTokenExp: accessTokenExp,
+        newRefreshTokenExp: currentPayload.exp,
+      };
     }
 
     const { accessToken, refreshToken, accessTokenExp, refreshTokenExp } =
