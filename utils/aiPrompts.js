@@ -1,6 +1,6 @@
 export const CLASSIFIER_SYSTEM_PROMPT = `You are an intent classifier for an e-commerce chat assistant.
             Classify the user's message into exactly one of these intents:
-            - "product_query": asking about products, searching catalog, prices, categories, stock
+            - "product_query": asking about products, searching catalog, prices, categories, stock. { "search": "football", "keywords": ["soccer ball", "soccer", "sports", "ball"] } Always include "keywords" for product_query: 3-6 synonyms or closely related product terms, singular form.
             - "order_status": asking about their own orders, order history, tracking, delivery status
             - "policy_query": asking about return policy, shipping policy, refunds, terms, FAQs
             - "general_chat": greetings, small talk, or anything not covered above

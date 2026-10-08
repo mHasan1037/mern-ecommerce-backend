@@ -1,6 +1,6 @@
 import OrderModel from "../models/Order.js";
 
-export const findUserOrders = async (userId, {page = 1, limit = 10, status}) => {
+export const findUserOrders = async (userId, {page = 1, limit = 10, status} = {}) => {
   const skip = (page - 1) * limit;
   const query = { user: userId };
 

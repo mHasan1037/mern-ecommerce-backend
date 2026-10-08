@@ -7,7 +7,7 @@ export const orderTool = {
   requiresAuth: true,
 
   async execute(args, context) {
-    const orders = await findUserOrders(context.userId);
+    const {orders} = await findUserOrders(context.userId);
 
     if (!orders.length) {
       return {
