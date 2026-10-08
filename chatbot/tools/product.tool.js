@@ -1,20 +1,18 @@
-import { findProducts } from "../../services/product.service.js";
-
+import { searchProductsForAIChat } from "../../services/product.service.js";
 
 export const productTool = {
   name: "product_query",
-  description: "Search the product catalog by name, category, or price range.",
+  description: "Search the product catalog by name or keywords, optionally within a price range.",
   requiresAuth: false,
 
   async execute(args, context) {
-    const { search, category, minPrice, maxPrice, sort, limit = 5 } = args;
+    const { search, keywords, minPrice, maxPrice, limit = 5 } = args ?? {};
 
-    const { products, total } = await findProducts({
+    const { products, total } = await searchProductsForAIChat({
       search,
-      category,
+      keywords,
       minPrice,
       maxPrice,
-      sort,
       limit,
     });
 

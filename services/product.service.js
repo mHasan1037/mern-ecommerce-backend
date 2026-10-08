@@ -58,3 +58,58 @@ export const findProducts = async ({
 
   return { total, page: Number(page), pages: Math.ceil(total / Number(limit)), products };
 };
+
+
+
+export const searchProductsForAIChat = async ({
+  search,
+  keywords = [],
+  minPrice,
+  maxPrice,
+  limit = 5,
+}) => {
+  const original = (search ?? "").trim();
+  const expanded = [
+    ...new Set(keywords.map((k) => String(k).trim().toLowerCase()).filter(Boolean)),
+  ].filter((k) => k !== original.toLowerCase());
+
+  const should = [];
+
+  if (original) {
+    should.push(
+      { text: { query: original, path: "name", fuzzy: { maxEdits: 1 }, score: { boost: { value: 5 } } } },
+      { text: { query: original, path: "description", fuzzy: { maxEdits: 1 }, score: { boost: { value: 2 } } } }
+    );
+  }
+
+  for (const k of expanded) {
+    should.push(
+      { phrase: { query: k, path: "name", score: { boost: { value: 3 } } } },
+      { phrase: { query: k, path: "description", score: { boost: { value: 1 } } } }
+    );
+  }
+
+  if (!should.length) return { products: [], total: 0 };
+
+  const match = {};
+  if (minPrice || maxPrice) {
+    match.price = {};
+    if (minPrice) match.price.$gte = Number(minPrice);
+    if (maxPrice) match.price.$lte = Number(maxPrice);
+  }
+
+  const results = await ProductModel.aggregate([
+    { $search: { index: "product_search", compound: { should, minimumShouldMatch: 1 } } },
+    { $addFields: { score: { $meta: "searchScore" } } },
+    ...(Object.keys(match).length ? [{ $match: match }] : []),
+    { $limit: Number(limit) * 4 },
+  ]);
+
+  
+  console.log("search scores:", results.map((r) => [r.name.slice(0, 40), r.score.toFixed(2)]));
+  const top = results[0]?.score ?? 0;
+  const relevant = results.filter((r) => r.score >= top * 0.5).slice(0, Number(limit));
+
+  const products = await ProductModel.populate(relevant, { path: "category", select: "name slug" });
+  return { products, total: products.length };
+};

@@ -1,24 +1,27 @@
 export const CLASSIFIER_SYSTEM_PROMPT = `You are an intent classifier for an e-commerce chat assistant.
-            Classify the user's message into exactly one of these intents:
-            - "product_query": asking about products, searching catalog, prices, categories, stock. { "search": "football", "keywords": ["soccer ball", "soccer", "sports", "ball"] } Always include "keywords" for product_query: 3-6 synonyms or closely related product terms, singular form.
-            - "order_status": asking about their own orders, order history, tracking, delivery status
-            - "policy_query": asking about return policy, shipping policy, refunds, terms, FAQs
-            - "general_chat": greetings, small talk, or anything not covered above
+Classify the user's message into exactly one of these intents:
+- "product_query": asking about products, searching catalog, prices, categories, stock
+- "order_status": asking about their own orders, order history, tracking, delivery status
+- "policy_query": asking about return policy, shipping policy, refunds, terms, FAQs
+- "general_chat": greetings, small talk, or anything not covered above
 
-            Also extract relevant entities as a flat object. Examples:
-            - product_query -> { "search": "blue shirt", "category": "clothing", "maxPrice": 2000 }
-            - order_status -> { "search": "phone" } when the user asks about a SPECIFIC product they may have ordered
-            (e.g. "did I order a phone", "when did I get my headphones") — use the product name as "search"
-            - order_status -> {} when the user asks generally about their orders/order status/latest order (no specific product mentioned)
-            - policy_query -> { "topic": "returns" }
-            - general_chat -> {}
+Also extract relevant entities as a flat object. Examples:
+- product_query -> { "search": "football", "keywords": ["football", "soccer ball", "soccer"] }
+- product_query -> { "search": "shirt", "keywords": ["shirt", "t-shirt", "tee"] }
+- product_query -> { "search": "headphones under 200", "keywords": ["headphones", "earphones", "earbuds"], "maxPrice": 200 }
+  For product_query, "keywords" must contain only words that name the SAME kind of product (synonyms, alternate names, other spellings).
+  Do NOT include broad category words (like "sports", "clothing", "electronics"), brands, or accessories.
+  Use 2-4 keywords, and put the user's own search term first.
+- order_status -> { "search": "phone" } when the user asks about a SPECIFIC product they may have ordered
+  (e.g. "did I order a phone", "when did I get my headphones") — use the product name as "search"
+- order_status -> {} when the user asks generally about their orders/order status/latest order (no specific product mentioned)
+- policy_query -> { "topic": "returns" }
+- general_chat -> {}
 
-            Respond with ONLY valid JSON in this exact shape, nothing else:
-            { "intent": "product_query", "entities": { "search": "blue shirt" } }
+Respond with ONLY valid JSON in this exact shape, nothing else:
+{ "intent": "product_query", "entities": { "search": "blue shirt", "keywords": ["blue shirt", "shirt"] } }
 
-            Omit entity keys that don't apply. Never invent values not implied by the message.`;
-
-
+Omit entity keys that don't apply. Never invent values not implied by the message.`;
 
 export const PRODUCT_COMPARISON_SYSTEM_PROMPT = `You are an e-commerce assistant comparing two products for a customer.
             You'll receive structured JSON for exactly two products.
