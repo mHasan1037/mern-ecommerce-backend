@@ -123,14 +123,16 @@ flowchart LR
 
 ```
 mern-ecommerce-backend/
+├── chatbot/        # AI shopping assistant: classifier, LangGraph workflow, intent handlers
 ├── config/         # Database connection and configuration
-├── controllers/    # Route handler logic (auth, products, orders, chat, etc.)
-├── chat/           # AI assistant: classifier, LangGraph workflow, intent handlers
-├── helpers/        # Reusable helpers (file uploads, tokens)
+├── controllers/    # Route handler logic (auth, products, orders, etc.)
+├── helpers/        # Reusable helper functions (file uploads, tokens)
 ├── middlewares/    # Auth guards, admin check, token auto-refresh, error handlers
 ├── models/         # Mongoose schemas (User, Product, Category, Order, etc.)
 ├── payment/        # SSLCommerz payment integration logic
 ├── routes/         # Express route definitions
+├── scripts/        # One-off maintenance scripts
+├── services/       # Shared business logic (e.g. product search used by the API and chatbot)
 ├── utils/          # Utility functions (email, slug, etc.)
 └── app.js          # Entry point: Express setup, middleware, routes
 ```
