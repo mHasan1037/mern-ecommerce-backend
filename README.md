@@ -37,7 +37,7 @@ This is the REST API backend of a MERN ecommerce application. It handles user au
 | Image Hosting | Cloudinary |
 | Payment Gateway | SSLCommerz |
 | Email | Nodemailer |
-| AI Integration | OpenAI API |
+| AI Integration | GROQ API |
 | Slug Generation | Slugify |
 | Dev Tool | Nodemon |
 | Module System | ES Modules (`"type": "module"`) |
@@ -73,7 +73,7 @@ mern-ecommerce-backend/
 | Payment | SSLCommerz checkout, payment verification |
 | Wishlist | Add/remove products |
 | Cart | Add/update/remove cart items |
-| AI | OpenAI-powered features |
+| AI | GROQAI-powered features |
 
 ---
 
