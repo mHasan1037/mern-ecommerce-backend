@@ -2,7 +2,7 @@
 
 A robust REST API powering a full-featured ecommerce platform, built with **Node.js**, **Express.js**, and **MongoDB**. This is the server-side of a MERN stack application with JWT authentication, Cloudinary image management, SSLCommerz payment integration, and AI-powered features via OpenAI.
 
-🎬 [Watch Video Presentation](https://www.youtube.com/watch?v=LNnoBmY9ezc) &nbsp;|&nbsp; 🌐 [Live API](https://mern-ecommerce-frontend-jg1w.onrender.com/)
+🎬 [Watch Video Presentation](https://youtu.be/gIIgdMW259Q) &nbsp;|&nbsp; 🌐 [Live API](https://mern-ecommerce-frontend-seven-sigma.vercel.app/)
 
 ---
 
