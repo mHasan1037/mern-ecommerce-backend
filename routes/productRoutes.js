@@ -19,6 +19,7 @@ import {
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
+import softAuth from "../middlewares/softAuth.js";
 
 const router = express.Router();
 
@@ -100,6 +101,7 @@ router.put(
 
 router.get(
   "/products/:id",
+  softAuth,
   getOneProduct
 )
 
