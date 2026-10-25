@@ -1,6 +1,7 @@
 
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
+import ProductViewModel from "../models/ProductView.js";
 
 
 export const findProducts = async ({
@@ -112,4 +113,32 @@ export const searchProductsForAIChat = async ({
 
   const products = await ProductModel.populate(relevant, { path: "category", select: "name slug" });
   return { products, total: products.length };
+};
+
+
+
+
+const DEDUPE_WINDOW_MS = 30 * 60 * 1000; // count a repeat view only after 30 min
+
+export const logProductView = async ({ userId, product }) => {
+  const existing = await ProductViewModel.findOne({ user: userId, product: product._id })
+    .select("lastViewedAt")
+    .lean();
+
+  // ignore refreshes / double fetches
+  if (existing && Date.now() - existing.lastViewedAt.getTime() < DEDUPE_WINDOW_MS) {
+    return;
+  }
+
+  await ProductViewModel.findOneAndUpdate(
+    { user: userId, product: product._id },
+    {
+      $set: {
+        category: product.category?._id ?? product.category,
+        lastViewedAt: new Date(),
+      },
+      $inc: { views: 1 },
+    },
+    { upsert: true }
+  );
 };

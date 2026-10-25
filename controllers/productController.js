@@ -3,7 +3,7 @@ import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
 import cloudinary, { safeDestroy, safeDestroyMany } from "../utils/cloudinary.js";
 import OrderModel from "../models/Order.js";
-import { findProducts } from "../services/product.service.js";
+import { findProducts, logProductView } from "../services/product.service.js";
 import {
   MAX_FEATURED_PRODUCTS,
   PRODUCT_UPDATABLE_FIELDS,
@@ -510,6 +510,15 @@ export const getOneProduct = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
+    }
+
+    if(req.user) {
+      logProductView({
+        userId: req.user._id,
+        product,
+      }).catch((err) => {
+        console.error("Failed to log product view:", err.message);
+      });
     }
 
     return res.status(200).json({
