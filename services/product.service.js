@@ -121,24 +121,22 @@ export const searchProductsForAIChat = async ({
 const DEDUPE_WINDOW_MS = 30 * 60 * 1000; // count a repeat view only after 30 min
 
 export const logProductView = async ({ userId, product }) => {
-  const existing = await ProductViewModel.findOne({ user: userId, product: product._id })
-    .select("lastViewedAt")
-    .lean();
+  if (!userId) return;
+  const cutoff = new Date(Date.now() - DEDUPE_WINDOW_MS);
 
-  // ignore refreshes / double fetches
-  if (existing && Date.now() - existing.lastViewedAt.getTime() < DEDUPE_WINDOW_MS) {
-    return;
-  }
-
-  await ProductViewModel.findOneAndUpdate(
-    { user: userId, product: product._id },
-    {
-      $set: {
-        category: product.category?._id ?? product.category,
-        lastViewedAt: new Date(),
+  try {
+    await ProductViewModel.updateOne(
+      { user: userId, product: product._id, lastViewedAt: { $lt: cutoff } },
+      {
+        $set: {
+          category: product.category?._id ?? product.category,
+          lastViewedAt: new Date(),
+        },
+        $inc: { views: 1 },
       },
-      $inc: { views: 1 },
-    },
-    { upsert: true }
-  );
+      { upsert: true }
+    );
+  } catch (err) {
+    if (err.code !== 11000) console.error("logProductView failed", err);
+  }
 };
