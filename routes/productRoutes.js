@@ -14,7 +14,8 @@ import {
   getCategoryById,
   updateCategory,
   getFeaturedProducts,
-  reorderCategires
+  reorderCategires,
+  getRecommendedProducts
 } from "../controllers/productController.js";
 import passport from "passport";
 import accessTokenAutoRefresh from "../middlewares/accessTokenAutoRefresh.js";
@@ -88,6 +89,13 @@ router.get(
 );
 
 router.get("/products/featured", getFeaturedProducts);
+
+router.get(
+  "/products/recommended",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", { session: false }),
+  getRecommendedProducts
+)
 
 router.put(
   "/products/:id",

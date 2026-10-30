@@ -8,6 +8,7 @@ import {
   MAX_FEATURED_PRODUCTS,
   PRODUCT_UPDATABLE_FIELDS,
 } from "../utils/constants.js";
+import { recommendProductsService } from "../services/recommended.service.js";
 
 export const createCategory = async (req, res) => {
   try {
@@ -730,3 +731,18 @@ export const getFeaturedProducts = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+export const getRecommendedProducts = async (req, res) => {
+  try {
+    const products = await recommendProductsService(req.user._id, 8);
+    res.json({ products });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load recommendations" });
+  }
+};
+

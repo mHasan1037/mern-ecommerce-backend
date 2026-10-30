@@ -1,7 +1,7 @@
 
 import CategoryModel from "../models/Category.js";
 import ProductModel from "../models/Product.js";
-import ProductViewModel from "../models/ProductView.js";
+import ProductViewModel from "../models/productView.js";
 
 
 export const findProducts = async ({
